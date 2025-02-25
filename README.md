@@ -1,0 +1,2 @@
+# NovaIssues
+Issues for NovaBot
