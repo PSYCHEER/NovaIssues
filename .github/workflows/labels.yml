@@ -16,7 +16,6 @@ jobs:
         id: check_label
         run: |
           labels=$(jq -r '.issue.labels[].name' $GITHUB_EVENT_PATH)
-          echo "labels=$labels" >> $GITHUB_ENV
           if echo "$labels" | grep -q "addon"; then
             echo "label=addon" >> $GITHUB_OUTPUT
           elif echo "$labels" | grep -q "bug"; then
