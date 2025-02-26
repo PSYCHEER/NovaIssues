@@ -19,14 +19,24 @@ jobs:
           const labels = context.payload.issue.labels.map(label => label.name.toLowerCase());
           const hasAddon = labels.includes('addon');
           const hasEnhancement = labels.includes('enhancement');
+          console.log(`Labels: ${labels}`);
+          console.log(`Has Addon: ${hasAddon}`);
+          console.log(`Has Enhancement: ${hasEnhancement}`);
           return { hasAddon, hasEnhancement };
+
+    - name: Debug outputs
+      run: |
+        echo "Has Addon: ${{ steps.check_labels.outputs.hasAddon }}"
+        echo "Has Enhancement: ${{ steps.check_labels.outputs.hasEnhancement }}"
 
     - name: Assign to project
       if: steps.check_labels.outputs.hasAddon == 'true' || steps.check_labels.outputs.hasEnhancement == 'true'
       uses: actions/github-script@v6
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
       with:
         script: |
-            try {
+          try {
             const projectUrl = 'https://api.github.com/users/PSYCHEER/projects/4';
             const columnName = 'Suggestions';
             const issueUrl = context.payload.issue.html_url;
@@ -35,7 +45,10 @@ jobs:
             console.log(`Column name: ${columnName}`);
 
             const columns = await github.projects.listColumns({
-                project_id: projectUrl.split('/').pop()
+              project_id: projectUrl.split('/').pop(),
+              headers: {
+                authorization: `token ${process.env.GH_PAT}`
+              }
             });
 
             console.log(`Columns fetched: ${JSON.stringify(columns.data)}`);
@@ -46,13 +59,16 @@ jobs:
             console.log(`Assigning to column ID: ${column.id}`);
 
             await github.projects.createCard({
-                column_id: column.id,
-                content_type: 'Issue',
-                content_id: context.payload.issue.id
+              column_id: column.id,
+              content_type: 'Issue',
+              content_id: context.payload.issue.id,
+              headers: {
+                authorization: `token ${process.env.GH_PAT}`
+              }
             });
 
             console.log('Issue successfully assigned to project');
-            } catch (error) {
+          } catch (error) {
             console.error(`Error assigning issue to project: ${error.message}`);
             throw error;
-            }
+          }
