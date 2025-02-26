@@ -37,13 +37,13 @@ async function run() {
               id
               fieldValues(first: 20) {
                 nodes {
-                  ... on ProjectV2ItemFieldValueCommon {
+                  ... on ProjectV2ItemFieldSingleSelectValue {
                     field {
                       ... on ProjectV2FieldCommon {
                         name
                       }
                     }
-                    value
+                    name
                   }
                 }
               }
@@ -60,7 +60,7 @@ async function run() {
 
   console.log('Project fields:', result.node.items.nodes);
 
-  const column = result.node.items.nodes.find(item => item.fieldValues.nodes.some(field => field.field.name === 'Status' && field.value === status));
+  const column = result.node.items.nodes.find(item => item.fieldValues.nodes.some(field => field.field.name === 'Status' && field.name === status));
   if (!column) {
     throw new Error(`Column with status ${status} not found`);
   }
