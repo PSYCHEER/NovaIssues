@@ -19,11 +19,11 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const label = context.payload.label ? context.payload.label.name : null;
-            const projectId = 'YOUR_PROJECT_ID'; // Replace with your project ID
+            const projectId = '4'; // Replace with your project ID
             const columnMapping = {
               'bug': 'Issue',
-              'addon': 'Suggestion',
-              'enhancement': 'Suggestion'
+              'addon': 'Suggestions',
+              'enhancement': 'Suggestions'
             };
 
             if (!label || !columnMapping[label]) {
