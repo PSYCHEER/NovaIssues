@@ -35,15 +35,54 @@ jobs:
             }
 
             if (status) {
-              const project = await github.projects.getProject({
-                project_id: projectId
+              const projectQuery = `
+                query($projectId: ID!) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      id
+                      title
+                      fields(first: 20) {
+                        nodes {
+                          ... on ProjectV2Field {
+                            id
+                            name
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `;
+
+              const projectData = await github.graphql(projectQuery, {
+                projectId: projectId
               });
 
-              const columns = await github.projects.listColumns({
-                project_id: projectId
+              const columnsQuery = `
+                query($projectId: ID!) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      id
+                      items(first: 100) {
+                        nodes {
+                          id
+                          content {
+                            ... on Issue {
+                              id
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `;
+
+              const columnsData = await github.graphql(columnsQuery, {
+                projectId: projectId
               });
 
-              const column = columns.data.find(col => col.name === status);
+              const column = columnsData.node.items.nodes.find(col => col.name === status);
 
               if (column) {
                 await github.projects.createCard({
