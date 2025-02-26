@@ -31,7 +31,7 @@ jobs:
           const { graphql } = require('@octokit/graphql');
           const graphqlWithAuth = graphql.defaults({
             headers: {
-              authorization: `token ${process.env.TOKEN}`
+              authorization: 'token ' + process.env.TOKEN
             }
           });
 
