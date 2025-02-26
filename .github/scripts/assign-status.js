@@ -25,19 +25,19 @@ async function run() {
 
   console.log('Determined status:', status);
 
-  // Fetch columns using GraphQL
+  // Fetch views and columns using GraphQL
   const query = `
     query($projectId: ID!) {
       node(id: $projectId) {
         ... on ProjectV2 {
           id
           title
-          fields(first: 20) {
+          views(first: 10) {
             nodes {
-              ... on ProjectV2Field {
-                id
-                name
-                options {
+              id
+              name
+              columns(first: 20) {
+                nodes {
                   id
                   name
                 }
@@ -53,9 +53,9 @@ async function run() {
     projectId: process.env.PROJECT_ID
   });
 
-  console.log('Project fields:', JSON.stringify(result.node.fields.nodes, null, 2));
+  console.log('Project columns:', JSON.stringify(result.node.views.nodes, null, 2));
 
-  const column = result.node.fields.nodes.flatMap(field => field.options).find(option => option.name === status);
+  const column = result.node.views.nodes.flatMap(view => view.columns.nodes).find(col => col.name === status);
   if (!column) {
     throw new Error(`Column with status ${status} not found`);
   }
@@ -64,8 +64,8 @@ async function run() {
 
   // Create card in the column
   const mutation = `
-    mutation($projectId: ID!, $contentId: ID!) {
-      addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+    mutation($columnId: ID!, $contentId: ID!) {
+      addProjectV2ItemById(input: {projectId: $columnId, contentId: $contentId}) {
         item {
           id
         }
@@ -74,7 +74,7 @@ async function run() {
   `;
 
   await graphqlWithAuth(mutation, {
-    projectId: process.env.PROJECT_ID,
+    columnId: column.id,
     contentId: issue.id
   });
 
