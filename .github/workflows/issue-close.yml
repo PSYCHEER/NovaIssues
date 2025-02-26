@@ -23,7 +23,7 @@ jobs:
                 not planned
             token: ${{ secrets.TOKEN }}
       - name: Not Planned
-        if: contains(github.event.label.name, 'not planned')
+        if: contains(github.event.label.name, 'not_planned')
         uses: peter-evans/close-issue@v3
         with:
             issue-number: ${{ github.event.issue.number }}
