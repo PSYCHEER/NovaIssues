@@ -33,20 +33,8 @@ jobs:
               return;
             }
 
-            const { data: projects } = await github.rest.projects.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-
-            const project = projects.find(proj => proj.id === parseInt(projectId));
-
-            if (!project) {
-              console.log('Project not found.');
-              return;
-            }
-
             const { data: columns } = await github.rest.projects.listColumns({
-              project_id: project.id
+              project_id: projectId
             });
 
             const column = columns.find(col => col.name === 'No status');
