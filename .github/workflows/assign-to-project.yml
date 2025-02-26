@@ -23,6 +23,8 @@ jobs:
           console.log(`Has Addon: ${hasAddon}`);
           console.log(`Has Enhancement: ${hasEnhancement}`);
           return { hasAddon, hasEnhancement };
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
 
     - name: Debug outputs
       run: |
