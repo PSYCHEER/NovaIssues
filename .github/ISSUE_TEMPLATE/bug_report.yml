@@ -1,0 +1,102 @@
+name: Bug Report
+description: File a bug report
+assignees: 'PSYCHEER'
+labels: ["type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## READ AND FOLLOW THE DESCRIPTIONS OF THIS ISSUE TEMPLATE!
+        Not doing so may result in your issue being closed without warning. Take your time and properly fill out everything as requested.
+
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Terms
+      options:
+        - label: "I'm using very last versions of provided addons/core"
+          required: true
+        - label: "I've already searched trough whole GitHub issue page and I've found no similar issue to this"
+          required: true
+        - label: "I've checked these boxes without even reading them."
+          required: false
+        - label: "I've been told from support to open GitHub issue"
+          required: true
+  - type: input
+    id: discord_tag
+    attributes:
+      label: Discord Username (optional)
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. novabot1234
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: "Example: Captcha causes crash"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce the behaviour
+      description: Explain how we can proceed to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+  - type: input
+    id: console_log
+    attributes:
+      label: Console Log
+      description: |-
+        You can use [pastebin](https://pastebin.com) to upload your log in there.
+      placeholder: "https://pastebin.com..."  
+    validations:
+      required: true
+  - type: textarea
+    id: errors
+    attributes:
+      label: Error (optional)
+      description: "Paste any errors you have here. Text pasted here will be formatted as code."
+      render: shell
+      placeholder: |
+        DiscordAPIError[10008]: Unknown Message
+        at handleErrors (E:\BBB\DiscordBot\node_modules\@discordjs\rest\dist\index.js:727:13)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async SequentialHandler.runRequest (E:\BBB\DiscordBot\node_modules\@discordjs\rest\dist\index.js:1128:23)
+        at async SequentialHandler.queueRequest (E:\BBB\DiscordBot\node_modules\@discordjs\rest\dist\index.js:959:14)
+        at async _REST.request (E:\BBB\DiscordBot\node_modules\@discordjs\rest\dist\index.js:1272:22)
+        at async GuildMessageManager.delete (E:\BBB\DiscordBot\node_modules\discord.js\src\managers\MessageManager.js:267:5)
+        at async Message.delete (E:\BBB\DiscordBot\node_modules\discord.js\src\structures\Message.js:921:5) {
+        requestBody: { files: undefined, json: undefined },
+        rawError: { message: 'Unknown Message', code: 10008 },
+        code: 10008,
+        status: 404,
+        method: 'DELETE',
+        url: 'https://discord.com/api/v10/channels/1329924740898619584/messages/1344092831563907185'
+  - type: textarea
+    id: npm_version
+    attributes:
+      label: NPM version
+      description: "Do command `npm -v` and paste the output here."
+      placeholder: "Example: 7.24.0"
+  - type: textarea
+    id: node_version
+    attributes:
+      label: Node.js version
+      description: "Do command `node -v` and paste the output here."
+      placeholder: "Example: 16.13.0"
+  - type: markdown
+    attributes:
+      value: |
+        ## Final Notes
+        Support is provided "as is" without any guarantee of accuracy, success or similar.
+        
+        Neither the Bot Developer nor any contributors are obligated to reply to your issue and your issue may be closed at any given moment, even unnanounced.
+        The Bot Developer and Contributors have the right to refuse support for any reason given.
