@@ -2,7 +2,9 @@ name: Assign Issues to Project Board
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [opened, labeled, unlabeled, edited]
+  issue_comment:
+    types: [created, edited]
 
 jobs:
   assign-to-project:
