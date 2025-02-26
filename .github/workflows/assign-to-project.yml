@@ -2,9 +2,7 @@ name: Assign Issues to Project Board
 
 on:
   issues:
-    types: [opened, labeled, edited]
-  issue_comment:
-    types: [created, edited]
+    types: [opened, labeled]
 
 jobs:
   assign-to-project:
@@ -18,7 +16,7 @@ jobs:
         with:
           script: |
             const issue = context.payload.issue;
-            const label = context.payload.label ? context.payload.label.name : null;
+            const labels = issue.labels.map(label => label.name);
             const projectId = '4'; // Replace with your project ID
             const columnMapping = {
               'bug': 'Issue',
@@ -26,12 +24,12 @@ jobs:
               'enhancement': 'Suggestions'
             };
 
-            if (!label || !columnMapping[label]) {
-              console.log('Label does not match any of the specified labels.');
+            const status = labels.map(label => columnMapping[label]).find(status => status);
+
+            if (!status) {
+              console.log('No matching label found for the issue.');
               return;
             }
-
-            const status = columnMapping[label];
 
             const { data: projectCards } = await github.projects.listCards({
               column_id: projectId,
@@ -48,5 +46,5 @@ jobs:
               });
               console.log(`Moved issue #${issue.number} to ${status} column.`);
             } else {
-              console.log(`Issue #${issue.number} is already in a different column.`);
+              console.log(`Issue #${issue.number} is already in a different column or not found.`);
             }
