@@ -1,108 +1,36 @@
-name: Assign Issues to Project
+name: Assign Issue to Project
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, labeled, edited]
   issue_comment:
     types: [created, edited]
 
 jobs:
   assign_to_project:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '22'
+      - name: Check out the repository
+        uses: actions/checkout@v2
 
-    - name: Install dependencies
-      run: npm install node-fetch@2
+      - name: Assign issue to project column
+        if: github.event.label.name == 'bug' || github.event.label.name == 'addon' || github.event.label.name == 'enhancement'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_ID: 4
+        run: |
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+          REPO=${{ github.repository }}
+          LABEL=${{ github.event.label.name }}
 
-    - name: Check issue labels
-      id: check_labels
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const labels = context.payload.issue.labels.map(label => label.name.toLowerCase());
-          const hasAddon = labels.includes('addon');
-          const hasEnhancement = labels.includes('enhancement');
-          console.log(`Labels: ${labels}`);
-          console.log(`Has Addon: ${hasAddon}`);
-          console.log(`Has Enhancement: ${hasEnhancement}`);
-          core.setOutput("hasAddon", hasAddon);
-          core.setOutput("hasEnhancement", hasEnhancement);
+          if [ "$LABEL" == "bug" ]; then
+            COLUMN_ID=12345678 # Replace with the actual column ID for "Issue"
+          elif [ "$LABEL" == "addon" ] || [ "$LABEL" == "enhancement" ]; then
+            COLUMN_ID=87654321 # Replace with the actual column ID for "Suggestions"
+          fi
 
-    - name: Debug outputs
-      run: |
-        echo "Has Addon: ${{ steps.check_labels.outputs.hasAddon }}"
-        echo "Has Enhancement: ${{ steps.check_labels.outputs.hasEnhancement }}"
-
-    - name: Create script to assign issue to project
-      run: |
-        echo "
-        const fetch = require('node-fetch');
-
-        async function assignIssueToProject() {
-          const projectUrl = 'https://api.github.com/users/PSYCHEER/projects/4';
-          const columnName = 'Suggestions';
-          const issueUrl = process.env.ISSUE_URL;
-          const token = process.env.GH_PAT;
-
-          console.log(`Assigning issue to project: ${projectUrl}`);
-          console.log(`Column name: ${columnName}`);
-
-          const projectId = projectUrl.split('/').pop();
-
-          const columnsResponse = await fetch(`https://api.github.com/projects/${projectId}/columns`, {
-            headers: {
-              'Authorization': `token ${token}`,
-              'Accept': 'application/vnd.github.inertia-preview+json'
-            }
-          });
-
-          if (!columnsResponse.ok) {
-            throw new Error(`Failed to fetch columns: ${columnsResponse.statusText}`);
-          }
-
-          const columns = await columnsResponse.json();
-          console.log(`Columns fetched: ${JSON.stringify(columns)}`);
-
-          const column = columns.find(col => col.name === columnName);
-          if (!column) throw new Error(`Column ${columnName} not found`);
-
-          console.log(`Assigning to column ID: ${column.id}`);
-
-          const cardResponse = await fetch(`https://api.github.com/projects/columns/${column.id}/cards`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `token ${token}`,
-              'Accept': 'application/vnd.github.inertia-preview+json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              content_id: process.env.ISSUE_ID,
-              content_type: 'Issue'
-            })
-          });
-
-          if (!cardResponse.ok) {
-            throw new Error(`Failed to create card: ${cardResponse.statusText}`);
-          }
-
-          console.log('Issue successfully assigned to project');
-        }
-
-        assignIssueToProject().catch(error => {
-          console.error(`Error assigning issue to project: ${error.message}`);
-          throw error;
-        });
-        " > assign-issue-to-project.js
-
-    - name: Assign to project
-      if: steps.check_labels.outputs.hasAddon == 'true' || steps.check_labels.outputs.hasEnhancement == 'true'
-      run: node assign-issue-to-project.js
-      env:
-        GH_PAT: ${{ secrets.GH_PAT }}
-        ISSUE_ID: ${{ github.event.issue.id }}
-        ISSUE_URL: ${{ github.event.issue.html_url }}
+          curl -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/projects/columns/$COLUMN_ID/cards \
+            -d "{\"content_id\": $ISSUE_NUMBER, \"content_type\": \"Issue\"}"
