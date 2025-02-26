@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Bug label
-        uses: konradpabjan/move-labeled-or-milestoned-issue@v2.0
+        uses: alxarno/move-labeled-or-milestoned-issue@5.7
         with:
           action-token: "${{ secrets.TOKEN }}"
           project-url: "https://github.com/PSYCHEER/NovaIssues/projects/4"
@@ -24,7 +24,7 @@ jobs:
           columns-to-ignore: "Suggestions, In progress, Ready, Done"
 
       - name: Addon label
-        uses: konradpabjan/move-labeled-or-milestoned-issue@v2.0
+        uses: alxarno/move-labeled-or-milestoned-issue@5.7
         with:
           action-token: "${{ secrets.TOKEN }}"
           project-url: "https://github.com/PSYCHEER/NovaIssues/projects/4"
@@ -33,7 +33,7 @@ jobs:
           columns-to-ignore: "Issue, In progress, Ready, Done"
 
       - name: Enhancement label
-        uses: konradpabjan/move-labeled-or-milestoned-issue@v2.0
+        uses: alxarno/move-labeled-or-milestoned-issue@5.7
         with:
           action-token: "${{ secrets.TOKEN }}"
           project-url: "https://github.com/PSYCHEER/NovaIssues/projects/4"
