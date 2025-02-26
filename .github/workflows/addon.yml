@@ -5,19 +5,58 @@ on:
     types: [labeled]
 
 jobs:
-  assign_status:
+  assign_addon:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
+      
+      - name: Check if issue has 'addon' or 'bug' label
+        id: check_label
+        run: |
+          labels=$(jq -r '.issue.labels[].name' $GITHUB_EVENT_PATH)
+          echo "labels=$labels" >> $GITHUB_ENV
+          if echo "$labels" | grep -q "addon"; then
+            echo "::set-output name=label::addon"
+          elif echo "$labels" | grep -q "bug"; then
+            echo "::set-output name=label::bug"
+          elif echo "$labels" | grep -q "enhancement"; then
+            echo "::set-output name=label::enhancement"
+          else
+            echo "Label is neither 'addon', 'enhancement' nor 'bug'. Exiting."
+            exit 0
+          fi
 
       - name: Addon label
+        if: steps.check_label.outputs.label == 'addon'
         uses: m7kvqbe1/github-action-move-issues@v1.1.2
         with:
           github-token: "${{ secrets.TOKEN }}"
           project-url: "https://github.com/users/PSYCHEER/projects/4"
           target-column: "Suggestions"
           target-labels: "addon"
+          default-column: "Issue"
+          ignored-columns: "In progress, Ready, Done"
+
+      - name: Enhancement label
+        if: steps.check_label.outputs.label == 'enhancement'
+        uses: m7kvqbe1/github-action-move-issues@v1.1.2
+        with:
+          github-token: "${{ secrets.TOKEN }}"
+          project-url: "https://github.com/users/PSYCHEER/projects/4"
+          target-column: "Suggestions"
+          target-labels: "enhancement"
+          default-column: "Issue"
+          ignored-columns: "In progress, Ready, Done"
+      
+      - name: Bug label
+        if: steps.check_label.outputs.label == 'bug'
+        uses: m7kvqbe1/github-action-move-issues@v1.1.2
+        with:
+          github-token: "${{ secrets.TOKEN }}"
+          project-url: "https://github.com/users/PSYCHEER/projects/4"
+          target-column: "Issue"
+          target-labels: "bug"
           default-column: "Issue"
           ignored-columns: "In progress, Ready, Done"
