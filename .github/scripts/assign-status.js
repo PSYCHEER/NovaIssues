@@ -25,24 +25,21 @@ async function run() {
 
   console.log('Determined status:', status);
 
-  // Fetch fields using GraphQL
+  // Fetch columns using GraphQL
   const query = `
     query($projectId: ID!) {
       node(id: $projectId) {
         ... on ProjectV2 {
           id
           title
-          items(first: 20) {
+          views(first: 10) {
             nodes {
-              id
-              fieldValues(first: 20) {
-                nodes {
-                  ... on ProjectV2ItemFieldSingleSelectValue {
-                    field {
-                      ... on ProjectV2FieldCommon {
-                        name
-                      }
-                    }
+              ... on ProjectV2View {
+                id
+                title
+                columns(first: 20) {
+                  nodes {
+                    id
                     name
                   }
                 }
@@ -58,14 +55,9 @@ async function run() {
     projectId: process.env.PROJECT_ID
   });
 
-  console.log('Project fields:', JSON.stringify(result.node.items.nodes, null, 2));
+  console.log('Project columns:', JSON.stringify(result.node.views.nodes, null, 2));
 
-  const column = result.node.items.nodes.find(item => 
-    item.fieldValues.nodes.some(field => {
-      console.log('Field:', field);
-      return field && field.field && field.field.name === 'Status' && field.name === status;
-    })
-  );
+  const column = result.node.views.nodes.flatMap(view => view.columns.nodes).find(col => col.name === status);
   if (!column) {
     throw new Error(`Column with status ${status} not found`);
   }
@@ -74,8 +66,8 @@ async function run() {
 
   // Create card in the column
   const mutation = `
-    mutation($projectId: ID!, $contentId: ID!) {
-      addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+    mutation($columnId: ID!, $contentId: ID!) {
+      addProjectV2ItemById(input: {projectId: $columnId, contentId: $contentId}) {
         item {
           id
         }
@@ -84,7 +76,7 @@ async function run() {
   `;
 
   await graphqlWithAuth(mutation, {
-    projectId: process.env.PROJECT_ID,
+    columnId: column.id,
     contentId: issue.id
   });
 
