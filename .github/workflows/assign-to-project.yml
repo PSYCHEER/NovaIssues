@@ -61,6 +61,15 @@ jobs:
               return;
             }
 
+            if (!fields || fields.length === 0) {
+              console.log('No fields found.');
+              return;
+            }
+
+            fields.forEach(field => {
+              console.log(`Field: ${field.name}`);
+            });
+
             const statusField = fields.find(field => field.name === 'Status');
 
             if (!statusField) {
