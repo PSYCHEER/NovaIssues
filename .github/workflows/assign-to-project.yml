@@ -29,10 +29,13 @@ jobs:
             if (labels.includes('bug')) {
               status = 'Issue';
             } else if (labels.includes('enhancement')) {
-              status = 'Suggestion';
+              status = 'Suggestions';
             } else if (labels.includes('addon')) {
-              status = 'Suggestion';
+              status = 'Suggestions';
             }
+
+            console.log(`Labels: ${labels}`);
+            console.log(`Status: ${status}`);
 
             if (status) {
               const projectQuery = `
@@ -58,6 +61,8 @@ jobs:
                 projectId: projectId
               });
 
+              console.log(`Project Data: ${JSON.stringify(projectData)}`);
+
               const columnsQuery = `
                 query($projectId: ID!) {
                   node(id: $projectId) {
@@ -82,13 +87,20 @@ jobs:
                 projectId: projectId
               });
 
+              console.log(`Columns Data: ${JSON.stringify(columnsData)}`);
+
               const column = columnsData.node.items.nodes.find(col => col.name === status);
 
               if (column) {
+                console.log(`Found column: ${JSON.stringify(column)}`);
                 await github.projects.createCard({
                   column_id: column.id,
                   content_id: context.payload.issue.id,
                   content_type: 'Issue'
                 });
+              } else {
+                console.log(`Column with status ${status} not found`);
               }
+            } else {
+              console.log('No matching status found for labels');
             }
