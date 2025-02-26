@@ -1,0 +1,19 @@
+name: Close Issues
+
+on:
+  issues:
+    types:
+      - labeled
+
+jobs:
+  close_issue:
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.label.name, 'invalid') ||
+      contains(github.event.label.name, 'duplicate') ||
+      contains(github.event.label.name, 'not planned')
+    steps:
+      - name: Close issue
+        run: gh issue close --comment "Auto-closed due to label ${GITHUB_EVENT_LABELS}"; exit 0;
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN }}
