@@ -19,4 +19,4 @@ jobs:
             issue-number: ${{ github.event.issue.number }}
             comment: Auto-closed
             labels: invalid, duplicate, not planned
-            token: ${{ secrets.GITHUB_TOKEN }}
+            token: ${{ secrets.TOKEN }}
