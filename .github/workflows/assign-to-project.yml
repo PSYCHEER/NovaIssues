@@ -11,6 +11,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '22'
+
+    - name: Install dependencies
+      run: npm install node-fetch@2
+
     - name: Check issue labels
       id: check_labels
       uses: actions/github-script@v6
@@ -37,9 +45,9 @@ jobs:
         GH_PAT: ${{ secrets.GH_PAT }}
       with:
         script: |
-          async function assignIssueToProject() {
-            const fetch = require('node-fetch');
+          const fetch = require('node-fetch');
 
+          async function assignIssueToProject() {
             const projectUrl = 'https://api.github.com/users/PSYCHEER/projects/4';
             const columnName = 'Suggestions';
             const issueUrl = context.payload.issue.html_url;
