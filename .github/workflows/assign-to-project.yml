@@ -33,38 +33,81 @@ jobs:
               return;
             }
 
-            const { data: columns } = await github.rest.projects.listColumns({
-              project_id: projectId
+            const { data: fields } = await github.graphql(`
+              query($projectId: ID!) {
+                node(id: $projectId) {
+                  ... on ProjectV2 {
+                    fields(first: 20) {
+                      nodes {
+                        ... on ProjectV2Field {
+                          id
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `, {
+              projectId: projectId
             });
 
-            const column = columns.find(col => col.name === 'No status');
+            const statusField = fields.nodes.find(field => field.name === 'Status');
 
-            if (!column) {
-              console.log('No status column not found.');
+            if (!statusField) {
+              console.log('Status field not found.');
               return;
             }
 
-            const { data: projectCards } = await github.rest.projects.listCards({
-              column_id: column.id,
-              archived_state: 'not_archived'
+            const { data: items } = await github.graphql(`
+              query($projectId: ID!) {
+                node(id: $projectId) {
+                  ... on ProjectV2 {
+                    items(first: 100) {
+                      nodes {
+                        id
+                        content {
+                          ... on Issue {
+                            id
+                            number
+                            url
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `, {
+              projectId: projectId
             });
 
-            const card = projectCards.find(card => card.content_url === issue.url);
+            const item = items.nodes.find(item => item.content.url === issue.url);
 
-            if (card) {
-              const targetColumn = columns.find(col => col.name === status);
-
-              if (!targetColumn) {
-                console.log(`Target column ${status} not found.`);
-                return;
-              }
-
-              await github.rest.projects.moveCard({
-                card_id: card.id,
-                position: 'top',
-                column_id: targetColumn.id
-              });
-              console.log(`Moved issue #${issue.number} to ${status} column.`);
-            } else {
-              console.log(`Issue #${issue.number} is not in the 'No status' column.`);
+            if (!item) {
+              console.log('Issue not found in the project.');
+              return;
             }
+
+            await github.graphql(`
+              mutation($itemId: ID!, $fieldId: ID!, $value: String!) {
+                updateProjectV2ItemFieldValue(input: {
+                  projectId: "${projectId}",
+                  itemId: $itemId,
+                  fieldId: $fieldId,
+                  value: {
+                    singleSelectOptionId: $value
+                  }
+                }) {
+                  projectV2Item {
+                    id
+                  }
+                }
+              }
+            `, {
+              itemId: item.id,
+              fieldId: statusField.id,
+              value: status
+            });
+
+            console.log(`Moved issue #${issue.number} to ${status} column.`);
