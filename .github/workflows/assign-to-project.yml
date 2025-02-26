@@ -34,81 +34,98 @@ jobs:
               return;
             }
 
-            const { data: fields } = await github.graphql(`
-              query($projectId: ID!) {
-                node(id: $projectId) {
-                  ... on ProjectV2 {
-                    fields(first: 20) {
-                      nodes {
-                        ... on ProjectV2Field {
-                          id
-                          name
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            `, {
-              projectId: projectId
-            });
-
-            const statusField = fields.nodes.find(field => field.name === 'Status');
-
-            if (!statusField) {
-              console.log('Status field not found.');
-              return;
-            }
-
-            const { data: items } = await github.graphql(`
-              query($projectId: ID!) {
-                node(id: $projectId) {
-                  ... on ProjectV2 {
-                    items(first: 100) {
-                      nodes {
-                        id
-                        content {
-                          ... on Issue {
+            let fields;
+            try {
+              const response = await github.graphql(`
+                query($projectId: ID!) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      fields(first: 20) {
+                        nodes {
+                          ... on ProjectV2Field {
                             id
-                            number
-                            url
+                            name
                           }
                         }
                       }
                     }
                   }
                 }
-              }
-            `, {
-              projectId: projectId
-            });
+              `, {
+                projectId: projectId
+              });
+              fields = response.node.fields.nodes;
+            } catch (error) {
+              console.log('Error fetching fields:', error);
+              return;
+            }
 
-            const item = items.nodes.find(item => item.content.url === issue.url);
+            const statusField = fields.find(field => field.name === 'Status');
+
+            if (!statusField) {
+              console.log('Status field not found.');
+              return;
+            }
+
+            let items;
+            try {
+              const response = await github.graphql(`
+                query($projectId: ID!) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      items(first: 100) {
+                        nodes {
+                          id
+                          content {
+                            ... on Issue {
+                              id
+                              number
+                              url
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `, {
+                projectId: projectId
+              });
+              items = response.node.items.nodes;
+            } catch (error) {
+              console.log('Error fetching items:', error);
+              return;
+            }
+
+            const item = items.find(item => item.content.url === issue.url);
 
             if (!item) {
               console.log('Issue not found in the project.');
               return;
             }
 
-            await github.graphql(`
-              mutation($itemId: ID!, $fieldId: ID!, $value: String!) {
-                updateProjectV2ItemFieldValue(input: {
-                  projectId: "${projectId}",
-                  itemId: $itemId,
-                  fieldId: $fieldId,
-                  value: {
-                    singleSelectOptionId: $value
-                  }
-                }) {
-                  projectV2Item {
-                    id
+            try {
+              await github.graphql(`
+                mutation($itemId: ID!, $fieldId: ID!, $value: String!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId: "${projectId}",
+                    itemId: $itemId,
+                    fieldId: $fieldId,
+                    value: {
+                      singleSelectOptionId: $value
+                    }
+                  }) {
+                    projectV2Item {
+                      id
+                    }
                   }
                 }
-              }
-            `, {
-              itemId: item.id,
-              fieldId: statusField.id,
-              value: status
-            });
-
-            console.log(`Moved issue #${issue.number} to ${status} column.`);
+              `, {
+                itemId: item.id,
+                fieldId: statusField.id,
+                value: status
+              });
+              console.log(`Moved issue #${issue.number} to ${status} column.`);
+            } catch (error) {
+              console.log('Error updating item field value:', error);
+            }
