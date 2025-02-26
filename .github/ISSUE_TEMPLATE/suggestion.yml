@@ -1,0 +1,65 @@
+name: 🟢Suggestion
+description: Suggest a suggestion
+assignees: 'PSYCHEER'
+labels: ["enhancement"]
+projects:
+  - "PSYCHEER/4"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## READ AND FOLLOW THE DESCRIPTIONS OF THIS ISSUE TEMPLATE!
+        Not doing so may result in your suggestion being closed without answer. Take your time and properly fill out everything as requested.
+
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Terms
+      options:
+        - label: "I'm using very last versions of provided addons/core"
+          required: true
+        - label: "I've already searched trough whole GitHub issue page and I've found no similar issue to this"
+          required: true
+        - label: "I've checked these boxes without even reading them."
+          required: false
+        - label: "I've been told from support to open GitHub issue"
+          required: true
+  - type: input
+    id: discord_tag
+    attributes:
+      label: Discord Username (optional)
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. novabot1234
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Describe the suggestion
+      description: A clear and concise description of what you want to see in future version of NovaBot.
+      placeholder: "Example: Suggestion system"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How do you imagine it?
+      description: Explain how you imagine the suggestion to be implemented.
+      placeholder: |
+        1. Command `/suggest`
+        2. Bot creates modal with settings of suggestion
+        3. User fills the modal
+        4. Bot sends the suggestion to the suggestions channel
+        5. Bot adds reaction users can vote with
+        6. After time or votes, bot closes the suggestion
+        7. Bot sends outcome to the outcome channel
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ## Final Notes
+        Support is provided "as is" without any guarantee of accuracy, success or similar.
+        
+        Neither the Bot Developer nor any contributors are obligated to reply to your issue and your issue may be closed at any given moment, even unnanounced.
+        The Bot Developer and Contributors have the right to refuse support for any reason given.
