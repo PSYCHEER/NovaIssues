@@ -21,16 +21,28 @@ jobs:
       - name: Install dependencies
         run: npm install @octokit/graphql
 
+      - name: Debug environment variables
+        run: |
+          echo "Label: ${{ github.event.label.name }}"
+          echo "Issue Number: ${{ github.event.issue.number }}"
+          echo "Repository Owner: ${{ github.repository_owner }}"
+          echo "Repository: ${{ github.repository }}"
+
       - name: Reassign issue based on label
         env:
           TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_EVENT_LABEL_NAME: ${{ github.event.label.name }}
+          GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          const { graphql } = require("@octokit/graphql");
-          const { Octokit } = require("@octokit/rest");
+          node -e "
+          const { graphql } = require('@octokit/graphql');
+          const { Octokit } = require('@octokit/rest');
           const octokit = new Octokit({ auth: process.env.TOKEN });
           const graphqlWithAuth = graphql.defaults({
             headers: {
-              authorization: `token ${process.env.TOKEN}`,
+              authorization: 'token ' + process.env.TOKEN,
             },
           });
 
@@ -57,53 +69,57 @@ jobs:
           }
 
           // Reassign the issue
-          await octokit.issues.update({
+          octokit.issues.update({
             owner,
             repo,
             issue_number: issueNumber,
             assignees: [assignee]
-          });
-
-          // Get the project item ID for the issue
-          const projectId = 'PVT_kwHOAo7FNc4AzGK0';
-          const { repository } = await graphqlWithAuth(`
-            query($owner: String!, $repo: String!, $issueNumber: Int!) {
-              repository(owner: $owner, name: $repo) {
-                issue(number: $issueNumber) {
-                  id
-                  projectItems(first: 1) {
-                    nodes {
-                      id
+          }).then(() => {
+            // Get the project item ID for the issue
+            const projectId = 'PVT_kwHOAo7FNc4AzGK0';
+            return graphqlWithAuth(\`
+              query($owner: String!, $repo: String!, $issueNumber: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  issue(number: $issueNumber) {
+                    id
+                    projectItems(first: 1) {
+                      nodes {
+                        id
+                      }
                     }
                   }
                 }
               }
-            }
-          `, {
-            owner,
-            repo,
-            issueNumber: parseInt(issueNumber, 10)
-          });
+            \`, {
+              owner,
+              repo,
+              issueNumber: parseInt(issueNumber, 10)
+            });
+          }).then(({ repository }) => {
+            const itemId = repository.issue.projectItems.nodes[0].id;
 
-          const itemId = repository.issue.projectItems.nodes[0].id;
-
-          // Update the project status field
-          await graphqlWithAuth(`
-            mutation($projectId: ID!, $itemId: ID!, $status: String!) {
-              updateProjectV2ItemFieldValue(input: {
-                projectId: $projectId,
-                itemId: $itemId,
-                fieldValue: {
-                  singleSelectOptionId: $status
-                }
-              }) {
-                projectV2Item {
-                  id
+            // Update the project status field
+            return graphqlWithAuth(\`
+              mutation($projectId: ID!, $itemId: ID!, $status: String!) {
+                updateProjectV2ItemFieldValue(input: {
+                  projectId: $projectId,
+                  itemId: $itemId,
+                  fieldValue: {
+                    singleSelectOptionId: $status
+                  }
+                }) {
+                  projectV2Item {
+                    id
+                  }
                 }
               }
-            }
-          `, {
-            projectId,
-            itemId,
-            status: projectStatus
+            \`, {
+              projectId: 'PVT_kwHOAo7FNc4AzGK0',
+              itemId,
+              status: projectStatus
+            });
+          }).catch(error => {
+            console.error(error);
+            process.exit(1);
           });
+          "
