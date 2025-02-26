@@ -77,10 +77,14 @@ jobs:
               return;
             }
 
+            items.forEach(item => {
+              console.log(`Item URL: ${item.content.url}`);
+            });
+
             const item = items.find(item => item.content.url === issue.url);
 
             if (!item) {
-              console.log('Issue not found in the project.');
+              console.log(`Issue not found in the project. Issue URL: ${issue.url}`);
               return;
             }
 
