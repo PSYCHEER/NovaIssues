@@ -26,7 +26,8 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const projectUrl = 'https://api.github.com/users/PSYCHEER/projects/4';
+          const projectUrl = 'https://api.github.com/projects/4';
+          echo("Project URL: " + projectUrl);
           const columnName = 'Suggestions';
           const issueUrl = context.payload.issue.html_url;
 
