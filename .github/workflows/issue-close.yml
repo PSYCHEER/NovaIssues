@@ -20,7 +20,6 @@ jobs:
             labels: |
                 invalid
                 duplicate
-                not planned
             token: ${{ secrets.TOKEN }}
       - name: Not Planned
         if: contains(github.event.label.name, 'not_planned')
