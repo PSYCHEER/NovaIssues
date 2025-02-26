@@ -2,7 +2,9 @@ name: Reassign Issue Based on Label
 
 on:
   issues:
-    types: [labeled]
+    types: [opened, labeled, edited]
+  issue_comment:
+    types: [created, edited]
 
 jobs:
   reassign_issue:
