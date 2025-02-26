@@ -27,11 +27,11 @@ jobs:
             let status = '';
 
             if (labels.includes('bug')) {
-              status = 'To Do';
+              status = 'Issue';
             } else if (labels.includes('enhancement')) {
-              status = 'In Progress';
-            } else if (labels.includes('question')) {
-              status = 'Done';
+              status = 'Suggestion';
+            } else if (labels.includes('addon')) {
+              status = 'Suggestion';
             }
 
             if (status) {
