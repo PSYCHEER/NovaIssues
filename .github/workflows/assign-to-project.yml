@@ -1,4 +1,4 @@
-name: Assign Issue to Project
+name: Assign Issues to Project Board
 
 on:
   issues:
@@ -7,67 +7,46 @@ on:
     types: [created, edited]
 
 jobs:
-  assign_to_project:
+  assign-to-project:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
 
-      - name: Debug event details
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-          GITHUB_EVENT_ACTION: ${{ github.event.action }}
-          GITHUB_EVENT_LABEL: ${{ github.event.label.name }}
-          GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-        run: |
-          echo "Event name: $GITHUB_EVENT_NAME"
-          echo "Event action: $GITHUB_EVENT_ACTION"
-          echo "Event label: $GITHUB_EVENT_LABEL"
-          echo "Issue number: $GITHUB_EVENT_ISSUE_NUMBER"
+      - name: Assign issue to project board
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const label = context.payload.label ? context.payload.label.name : null;
+            const projectId = 'YOUR_PROJECT_ID'; // Replace with your project ID
+            const columnMapping = {
+              'bug': 'Issue',
+              'addon': 'Suggestion',
+              'enhancement': 'Suggestion'
+            };
 
-      - name: Print issue label for debugging
-        run: |
-          echo "Issue label: ${{ github.event.label.name }}"
+            if (!label || !columnMapping[label]) {
+              console.log('Label does not match any of the specified labels.');
+              return;
+            }
 
-      - name: Assign issue to project column and update card status fields
-        if: ${{ github.event.label.name == 'bug' || github.event.label.name == 'addon' || github.event.label.name == 'enhancement' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PROJECT_ID: 4
-        run: |
-          ISSUE_NUMBER=${{ github.event.issue.number }}
-          REPO=${{ github.repository }}
-          LABEL=${{ github.event.label.name }}
+            const status = columnMapping[label];
 
-          if [ "$LABEL" == "bug" ]; then
-            COLUMN_NAME="Issue"
-          elif [ "$LABEL" == "addon" ] || [ "$LABEL" == "enhancement" ]; then
-            COLUMN_NAME="Suggestions"
-          fi
+            const { data: projectCards } = await github.projects.listCards({
+              column_id: projectId,
+              archived_state: 'not_archived'
+            });
 
-          echo "Label: $LABEL"
-          echo "Column Name: $COLUMN_NAME"
+            const card = projectCards.find(card => card.content_url === issue.url);
 
-          # Get the column ID based on the column name
-          COLUMN_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-                           -H "Accept: application/vnd.github.inertia-preview+json" \
-                           https://api.github.com/repos/$REPO/projects/$PROJECT_ID/columns | \
-                     jq -r --arg COLUMN_NAME "$COLUMN_NAME" '.[] | select(.name == $COLUMN_NAME) | .id')
-
-          echo "Column ID: $COLUMN_ID"
-
-          # Create a project card for the issue
-          CARD_ID=$(curl -s -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/projects/columns/$COLUMN_ID/cards \
-            -d "{\"content_id\": $ISSUE_NUMBER, \"content_type\": \"Issue\"}" | jq -r '.id')
-
-          echo "Card ID: $CARD_ID"
-
-          # Update the card status fields (replace FIELD_ID and VALUE with actual values)
-          curl -X PATCH \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/projects/columns/cards/$CARD_ID \
-            -d "{\"note\": \"Status: Suggestions\"}" # Replace with actual status field update
+            if (card && card.column_id === 'No status') {
+              await github.projects.moveCard({
+                card_id: card.id,
+                position: 'top',
+                column_id: status
+              });
+              console.log(`Moved issue #${issue.number} to ${status} column.`);
+            } else {
+              console.log(`Issue #${issue.number} is already in a different column.`);
+            }
