@@ -29,8 +29,11 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
+**System information - Please paste output of these commands from console**
+`npm -v`
+`node -v`
+
+If you cannot run commands from console, please try to catch these values somewhere.
 
 **Console Log**
 
