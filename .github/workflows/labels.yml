@@ -28,7 +28,7 @@ jobs:
           elif echo "$labels" | grep -q "documentation"; then
             echo "label=documentation" >> $GITHUB_OUTPUT
           else
-            echo "Label is neither 'addon', 'enhancement' nor 'bug'. Exiting."
+            echo "Label is neither 'addon', 'enhancement', 'bug', 'candidate', nor 'documentation'. Exiting."
             exit 0
           fi
 
