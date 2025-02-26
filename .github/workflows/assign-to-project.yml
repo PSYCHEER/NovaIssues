@@ -55,6 +55,7 @@ jobs:
                 projectId: projectId
               });
               fields = response.node.fields.nodes;
+              console.log('Fields:', fields);
             } catch (error) {
               console.log('Error fetching fields:', error);
               return;
@@ -92,6 +93,7 @@ jobs:
                 projectId: projectId
               });
               items = response.node.items.nodes;
+              console.log('Items:', items);
             } catch (error) {
               console.log('Error fetching items:', error);
               return;
