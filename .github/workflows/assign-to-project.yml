@@ -4,7 +4,7 @@ on:
   issues:
     types: [opened, edited]
   issue_comment:
-    types: [created, edited]
+    types: [opened, edited]
 
 jobs:
   assign_to_project:
@@ -37,9 +37,9 @@ jobs:
         GH_PAT: ${{ secrets.GH_PAT }}
       with:
         script: |
-          const fetch = require('node-fetch');
-
           async function assignIssueToProject() {
+            const fetch = require('node-fetch');
+
             const projectUrl = 'https://api.github.com/users/PSYCHEER/projects/4';
             const columnName = 'Suggestions';
             const issueUrl = context.payload.issue.html_url;
