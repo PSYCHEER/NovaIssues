@@ -14,6 +14,9 @@ jobs:
       contains(github.event.label.name, 'not planned')
     steps:
       - name: Close issue
-        run: gh issue close --comment "Auto-closed due to label ${GITHUB_EVENT_LABELS}"; exit 0;
-        env:
-          GH_TOKEN: ${{ secrets.TOKEN }}
+        uses: peter-evans/close-issue@v3
+        with:
+            issue-number: ${{ github.event.issue.number }}
+            comment: Auto-closed
+            labels: invalid, duplicate, not planned
+            token: ${{ secrets.GITHUB_TOKEN }}

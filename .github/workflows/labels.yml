@@ -2,10 +2,10 @@ name: Addon to project
 
 on:
   issues:
-    types: [labeled, unlabeled]
+    types: [labeled]
 
 jobs:
-  assign_addon:
+  assign_status:
     runs-on: ubuntu-latest
 
     steps:
