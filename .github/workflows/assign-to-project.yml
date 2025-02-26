@@ -6,120 +6,44 @@ on:
   issue_comment:
     types: [created, edited]
 
+
 jobs:
-  reassign_issue:
+  list-issues:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      - name: Install dependencies
-        run: npm install @octokit/graphql
-
-      - name: Debug environment variables
-        run: |
-          echo "Label: ${{ github.event.label.name }}"
-          echo "Issue Number: ${{ github.event.issue.number }}"
-          echo "Repository Owner: ${{ github.repository_owner }}"
-          echo "Repository: ${{ github.repository }}"
-
-      - name: Reassign issue based on label
+      - name: List issues assigned to the project
         env:
-          TOKEN: ${{ secrets.TOKEN }}
-          GITHUB_EVENT_LABEL_NAME: ${{ github.event.label.name }}
-          GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
-          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
         run: |
-          node -e "
-          const { graphql } = require('@octokit/graphql');
-          const { Octokit } = require('@octokit/rest');
-          const octokit = new Octokit({ auth: process.env.TOKEN });
-          const graphqlWithAuth = graphql.defaults({
-            headers: {
-              authorization: 'token ' + process.env.TOKEN,
-            },
-          });
+          echo '{
+            "query": "query { 
+              node(id: \\"PVT_kwHOAo7FNc4AzGK0\\") { 
+                ... on ProjectV2 { 
+                  items(first: 100) { 
+                    nodes { 
+                      content { 
+                        ... on Issue { 
+                          title 
+                          number 
+                          assignees(first: 10) { 
+                            nodes { 
+                              login 
+                            } 
+                          } 
+                        } 
+                      } 
+                    } 
+                  } 
+                } 
+              } 
+            }"
+          }' > query.json
 
-          const label = process.env.GITHUB_EVENT_LABEL_NAME;
-          const issueNumber = process.env.GITHUB_EVENT_ISSUE_NUMBER;
-          const owner = process.env.GITHUB_REPOSITORY_OWNER;
-          const repo = process.env.GITHUB_REPOSITORY;
-
-          let assignee;
-          let projectStatus;
-
-          switch (label) {
-            case 'bug':
-              assignee = 'bug-fixer';
-              projectStatus = 'In Progress';
-              break;
-            case 'feature':
-              assignee = 'feature-dev';
-              projectStatus = 'To Do';
-              break;
-            default:
-              assignee = 'default-assignee';
-              projectStatus = 'Backlog';
-          }
-
-          // Reassign the issue
-          octokit.issues.update({
-            owner,
-            repo,
-            issue_number: issueNumber,
-            assignees: [assignee]
-          }).then(() => {
-            // Get the project item ID for the issue
-            const projectId = 'PVT_kwHOAo7FNc4AzGK0';
-            return graphqlWithAuth(\`
-              query($owner: String!, $repo: String!, $issueNumber: Int!) {
-                repository(owner: $owner, name: $repo) {
-                  issue(number: $issueNumber) {
-                    id
-                    projectItems(first: 1) {
-                      nodes {
-                        id
-                      }
-                    }
-                  }
-                }
-              }
-            \`, {
-              owner,
-              repo,
-              issueNumber: parseInt(issueNumber, 10)
-            });
-          }).then(({ repository }) => {
-            const itemId = repository.issue.projectItems.nodes[0].id;
-
-            // Update the project status field
-            return graphqlWithAuth(\`
-              mutation($projectId: ID!, $itemId: ID!, $status: String!) {
-                updateProjectV2ItemFieldValue(input: {
-                  projectId: $projectId,
-                  itemId: $itemId,
-                  fieldValue: {
-                    singleSelectOptionId: $status
-                  }
-                }) {
-                  projectV2Item {
-                    id
-                  }
-                }
-              }
-            \`, {
-              projectId: 'PVT_kwHOAo7FNc4AzGK0',
-              itemId,
-              status: projectStatus
-            });
-          }).catch(error => {
-            console.error(error);
-            process.exit(1);
-          });
-          "
+          curl -X POST -H "Authorization: bearer $GITHUB_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d @query.json \
+                https://api.github.com/graphql \
+                | jq '.data.node.items.nodes[].content | {title, number, assignees: .assignees[].login}'
