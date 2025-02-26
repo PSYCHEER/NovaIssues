@@ -1,10 +1,8 @@
-name: Assign Issue to Status Based on Label
+name: Bug to project
 
 on:
   issues:
-    types: [opened, labeled, edited]
-  issue_comment:
-    types: [created, edited]
+    types: [labeled]
 
 jobs:
   assign_status:
@@ -21,15 +19,5 @@ jobs:
           project-url: "https://github.com/users/PSYCHEER/projects/4"
           target-column: "Issue"
           target-labels: "bug"
-          default-column: "Issue"
-          ignored-columns: "In progress, Ready, Done"
-
-      - name: Addon label
-        uses: m7kvqbe1/github-action-move-issues@v1.1.2
-        with:
-          github-token: "${{ secrets.TOKEN }}"
-          project-url: "https://github.com/users/PSYCHEER/projects/4"
-          target-column: "Suggestions"
-          target-labels: "addon"
           default-column: "Issue"
           ignored-columns: "In progress, Ready, Done"
