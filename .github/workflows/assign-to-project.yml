@@ -30,6 +30,6 @@ jobs:
           github-token: "${{ secrets.TOKEN }}"
           project-url: "https://github.com/users/PSYCHEER/projects/4"
           target-column: "Suggestions"
-          target-labels: "addon, enhancement"
+          target-labels: "addon"
           default-column: "Issue"
           ignored-columns: "In progress, Ready, Done"
