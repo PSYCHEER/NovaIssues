@@ -37,12 +37,9 @@ jobs:
         GH_PAT: ${{ secrets.GH_PAT }}
       with:
         script: |
-          const { Octokit } = require("@octokit/rest");
-          const octokit = new Octokit({
-            auth: process.env.GH_PAT
-          });
+          const fetch = require('node-fetch');
 
-          try {
+          async function assignIssueToProject() {
             const projectUrl = 'https://api.github.com/users/PSYCHEER/projects/4';
             const columnName = 'Suggestions';
             const issueUrl = context.payload.issue.html_url;
@@ -50,25 +47,6 @@ jobs:
             console.log(`Assigning issue to project: ${projectUrl}`);
             console.log(`Column name: ${columnName}`);
 
-            const columns = await octokit.projects.listColumns({
-              project_id: projectUrl.split('/').pop()
-            });
+            const projectId = projectUrl.split('/').pop();
 
-            console.log(`Columns fetched: ${JSON.stringify(columns.data)}`);
-
-            const column = columns.data.find(col => col.name === columnName);
-            if (!column) throw new Error(`Column ${columnName} not found`);
-
-            console.log(`Assigning to column ID: ${column.id}`);
-
-            await octokit.projects.createCard({
-              column_id: column.id,
-              content_type: 'Issue',
-              content_id: context.payload.issue.id
-            });
-
-            console.log('Issue successfully assigned to project');
-          } catch (error) {
-            console.error(`Error assigning issue to project: ${error.message}`);
-            throw error;
-          }
+            const ▋
