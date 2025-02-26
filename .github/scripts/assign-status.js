@@ -58,12 +58,13 @@ async function run() {
     projectId: process.env.PROJECT_ID
   });
 
-  console.log('Project fields:', result.node.items.nodes);
+  console.log('Project fields:', JSON.stringify(result.node.items.nodes, null, 2));
 
   const column = result.node.items.nodes.find(item => 
-    item.fieldValues.nodes.some(field => 
-      field && field.field && field.field.name === 'Status' && field.name === status
-    )
+    item.fieldValues.nodes.some(field => {
+      console.log('Field:', field);
+      return field && field.field && field.field.name === 'Status' && field.name === status;
+    })
   );
   if (!column) {
     throw new Error(`Column with status ${status} not found`);
