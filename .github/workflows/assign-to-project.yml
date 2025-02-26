@@ -3,6 +3,8 @@ name: Assign Issues to Project
 on:
   issues:
     types: [opened, edited]
+  issue_comment:
+    types: [created, edited]
 
 jobs:
   assign_to_project:
