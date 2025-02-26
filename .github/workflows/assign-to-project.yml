@@ -19,7 +19,7 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const labels = issue.labels.map(label => label.name);
-            const projectId = '4'; // Replace with your project ID
+            const projectId = 'PVT_kwHOAo7FNc4AzGK0'; // Replace with your project global ID
             const columnMapping = {
               'bug': 'Issue',
               'addon': 'Suggestions',
