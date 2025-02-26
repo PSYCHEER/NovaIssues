@@ -26,20 +26,33 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const projectUrl = 'https://api.github.com/projects/4';
-          echo("Project URL: " + projectUrl);
-          const columnName = 'Suggestions';
-          const issueUrl = context.payload.issue.html_url;
+            try {
+            const projectUrl = 'https://api.github.com/users/PSYCHEER/projects/4';
+            const columnName = 'Suggestions';
+            const issueUrl = context.payload.issue.html_url;
 
-          const columns = await github.projects.listColumns({
-            project_id: projectUrl.split('/').pop()
-          });
+            console.log(`Assigning issue to project: ${projectUrl}`);
+            console.log(`Column name: ${columnName}`);
 
-          const column = columns.data.find(col => col.name === columnName);
-          if (!column) throw new Error(`Column ${columnName} not found`);
+            const columns = await github.projects.listColumns({
+                project_id: projectUrl.split('/').pop()
+            });
 
-          await github.projects.createCard({
-            column_id: column.id,
-            content_type: 'Issue',
-            content_id: context.payload.issue.id
-          });
+            console.log(`Columns fetched: ${JSON.stringify(columns.data)}`);
+
+            const column = columns.data.find(col => col.name === columnName);
+            if (!column) throw new Error(`Column ${columnName} not found`);
+
+            console.log(`Assigning to column ID: ${column.id}`);
+
+            await github.projects.createCard({
+                column_id: column.id,
+                content_type: 'Issue',
+                content_id: context.payload.issue.id
+            });
+
+            console.log('Issue successfully assigned to project');
+            } catch (error) {
+            console.error(`Error assigning issue to project: ${error.message}`);
+            throw error;
+            }
