@@ -32,16 +32,14 @@ async function run() {
         ... on ProjectV2 {
           id
           title
-          views(first: 10) {
+          fields(first: 20) {
             nodes {
-              ... on ProjectV2View {
+              ... on ProjectV2Field {
                 id
-                title
-                columns(first: 20) {
-                  nodes {
-                    id
-                    name
-                  }
+                name
+                options {
+                  id
+                  name
                 }
               }
             }
@@ -55,9 +53,9 @@ async function run() {
     projectId: process.env.PROJECT_ID
   });
 
-  console.log('Project columns:', JSON.stringify(result.node.views.nodes, null, 2));
+  console.log('Project fields:', JSON.stringify(result.node.fields.nodes, null, 2));
 
-  const column = result.node.views.nodes.flatMap(view => view.columns.nodes).find(col => col.name === status);
+  const column = result.node.fields.nodes.flatMap(field => field.options).find(option => option.name === status);
   if (!column) {
     throw new Error(`Column with status ${status} not found`);
   }
@@ -66,8 +64,8 @@ async function run() {
 
   // Create card in the column
   const mutation = `
-    mutation($columnId: ID!, $contentId: ID!) {
-      addProjectV2ItemById(input: {projectId: $columnId, contentId: $contentId}) {
+    mutation($projectId: ID!, $contentId: ID!) {
+      addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
         item {
           id
         }
@@ -76,7 +74,7 @@ async function run() {
   `;
 
   await graphqlWithAuth(mutation, {
-    columnId: column.id,
+    projectId: process.env.PROJECT_ID,
     contentId: issue.id
   });
 
