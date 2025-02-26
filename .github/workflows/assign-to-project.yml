@@ -26,7 +26,8 @@ jobs:
           echo "Issue number: $GITHUB_EVENT_ISSUE_NUMBER"
 
       - name: Print issue label for debugging
-        run: echo "Issue label: ${{ github.event.label.name }}"
+        run: |
+          echo "Issue label: ${{ github.event.label.name }}"
 
       - name: Assign issue to project column and update card status fields
         if: ${{ github.event.label.name == 'bug' || github.event.label.name == 'addon' || github.event.label.name == 'enhancement' }}
