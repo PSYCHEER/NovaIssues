@@ -19,7 +19,7 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const labels = issue.labels.map(label => label.name);
-            const projectId = 'YOUR_PROJECT_ID'; // Replace with your project ID
+            const projectId = '4'; // Replace with your project ID
             const columnMapping = {
               'bug': 'Issue',
               'addon': 'Suggestions',
@@ -33,7 +33,7 @@ jobs:
               return;
             }
 
-            const { data: projects } = await github.projects.listForRepo({
+            const { data: projects } = await github.rest.projects.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo
             });
@@ -45,7 +45,7 @@ jobs:
               return;
             }
 
-            const { data: columns } = await github.projects.listColumns({
+            const { data: columns } = await github.rest.projects.listColumns({
               project_id: project.id
             });
 
@@ -56,7 +56,7 @@ jobs:
               return;
             }
 
-            const { data: projectCards } = await github.projects.listCards({
+            const { data: projectCards } = await github.rest.projects.listCards({
               column_id: column.id,
               archived_state: 'not_archived'
             });
@@ -71,7 +71,7 @@ jobs:
                 return;
               }
 
-              await github.projects.moveCard({
+              await github.rest.projects.moveCard({
                 card_id: card.id,
                 position: 'top',
                 column_id: targetColumn.id
