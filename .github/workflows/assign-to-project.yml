@@ -34,49 +34,6 @@ jobs:
               return;
             }
 
-            let fields;
-            try {
-              const response = await github.graphql(`
-                query($projectId: ID!) {
-                  node(id: $projectId) {
-                    ... on ProjectV2 {
-                      fields(first: 20) {
-                        nodes {
-                          ... on ProjectV2Field {
-                            id
-                            name
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              `, {
-                projectId: projectId
-              });
-              fields = response.node.fields.nodes;
-              console.log('Fields:', fields);
-            } catch (error) {
-              console.log('Error fetching fields:', error);
-              return;
-            }
-
-            if (!fields || fields.length === 0) {
-              console.log('No fields found.');
-              return;
-            }
-
-            fields.forEach(field => {
-              console.log(`Field ID: ${field.id}, Field Name: ${field.name}`);
-            });
-
-            const statusField = fields.find(field => field.name === 'Status');
-
-            if (!statusField) {
-              console.log('Status field not found.');
-              return;
-            }
-
             let items;
             try {
               const response = await github.graphql(`
@@ -91,6 +48,18 @@ jobs:
                               id
                               number
                               url
+                            }
+                          }
+                          fieldValues(first: 20) {
+                            nodes {
+                              ... on ProjectV2ItemFieldSingleSelectValue {
+                                field {
+                                  ... on ProjectV2SingleSelectField {
+                                    name
+                                  }
+                                }
+                                name
+                              }
                             }
                           }
                         }
@@ -115,6 +84,13 @@ jobs:
               return;
             }
 
+            const statusField = item.fieldValues.nodes.find(fieldValue => fieldValue.field.name === 'Status');
+
+            if (!statusField) {
+              console.log('Status field not found in the issue.');
+              return;
+            }
+
             try {
               await github.graphql(`
                 mutation($itemId: ID!, $fieldId: ID!, $value: String!) {
@@ -133,7 +109,7 @@ jobs:
                 }
               `, {
                 itemId: item.id,
-                fieldId: statusField.id,
+                fieldId: statusField.field.id,
                 value: status
               });
               console.log(`Moved issue #${issue.number} to ${status} column.`);
