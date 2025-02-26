@@ -1,0 +1,42 @@
+name: Assign Issues to Project
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  assign_to_project:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check issue labels
+      id: check_labels
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const labels = context.payload.issue.labels.map(label => label.name.toLowerCase());
+          const hasAddon = labels.includes('addon');
+          const hasEnhancement = labels.includes('enhancement');
+          return { hasAddon, hasEnhancement };
+
+    - name: Assign to project
+      if: steps.check_labels.outputs.hasAddon == 'true' || steps.check_labels.outputs.hasEnhancement == 'true'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const projectUrl = 'https://api.github.com/repos/PSYCHEER/projects/4';
+          const columnName = 'Suggestions';
+          const issueUrl = context.payload.issue.html_url;
+
+          const columns = await github.projects.listColumns({
+            project_id: projectUrl.split('/').pop()
+          });
+
+          const column = columns.data.find(col => col.name === columnName);
+          if (!column) throw new Error(`Column ${columnName} not found`);
+
+          await github.projects.createCard({
+            column_id: column.id,
+            content_type: 'Issue',
+            content_id: context.payload.issue.id
+          });
