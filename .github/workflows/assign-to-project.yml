@@ -18,7 +18,7 @@ jobs:
         uses: m7kvqbe1/github-action-move-issues@v1.1.2
         with:
           github-token: "${{ secrets.TOKEN }}"
-          project-url: "https://github.com/PSYCHEER/NovaIssues/projects/4"
+          project-url: "https://github.com/users/PSYCHEER/projects/4"
           target-column: "Issue"
           target-labels: "bug"
           default-column: "Issue"
@@ -28,7 +28,7 @@ jobs:
         uses: m7kvqbe1/github-action-move-issues@v1.1.2
         with:
           github-token: "${{ secrets.TOKEN }}"
-          project-url: "https://github.com/PSYCHEER/NovaIssues/projects/4"
+          project-url: "https://github.com/users/PSYCHEER/projects/4"
           target-column: "Suggestions"
           target-labels: "addon, enhancement"
           default-column: "Issue"
