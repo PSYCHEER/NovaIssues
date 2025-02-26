@@ -17,8 +17,8 @@ jobs:
       - name: Bug label
         uses: konradpabjan/move-labeled-or-milestoned-issue@v2.0
         with:
-          action-token: ${{ secrets.TOKEN }}
-          project-url: https://github.com/users/PSYCHEER/projects/4
+          action-token: "${{ secrets.TOKEN }}"
+          project-url: "https://github.com/users/PSYCHEER/projects/4"
           column-name: "Issue"
           label-name: "bug"
           columns-to-ignore: "Suggestions, In progress, Ready, Done"
@@ -26,8 +26,8 @@ jobs:
       - name: Addon label
         uses: konradpabjan/move-labeled-or-milestoned-issue@v2.0
         with:
-          action-token: ${{ secrets.TOKEN }}
-          project-url: https://github.com/users/PSYCHEER/projects/4
+          action-token: "${{ secrets.TOKEN }}"
+          project-url: "https://github.com/users/PSYCHEER/projects/4"
           column-name: "Suggestions"
           label-name: "addon"
           columns-to-ignore: "Issue, In progress, Ready, Done"
@@ -35,8 +35,8 @@ jobs:
       - name: Enhancement label
         uses: konradpabjan/move-labeled-or-milestoned-issue@v2.0
         with:
-          action-token: ${{ secrets.TOKEN }}
-          project-url: https://github.com/users/PSYCHEER/projects/4
+          action-token: "${{ secrets.TOKEN }}"
+          project-url: "https://github.com/users/PSYCHEER/projects/4"
           column-name: "Suggestions"
           label-name: "enhancement"
           columns-to-ignore: "Issue, In progress, Ready, Done"
