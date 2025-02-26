@@ -88,8 +88,8 @@ jobs:
 
             // Create card in the column
             const mutation = `
-              mutation($columnId: ID!, $issueId: ID!) {
-                addProjectV2ItemById(input: {projectId: $columnId, contentId: $issueId}) {
+              mutation($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
                   item {
                     id
                   }
@@ -98,8 +98,8 @@ jobs:
             `;
 
             await graphqlWithAuth(mutation, {
-              columnId: column.id,
-              issueId: issue.id
+              projectId: process.env.PROJECT_ID,
+              contentId: issue.id
             });
 
             console.log('Card created in column:', column.name);
