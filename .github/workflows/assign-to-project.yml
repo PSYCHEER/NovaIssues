@@ -67,7 +67,7 @@ jobs:
             }
 
             fields.forEach(field => {
-              console.log(`Field: ${field.name}`);
+              console.log(`Field ID: ${field.id}, Field Name: ${field.name}`);
             });
 
             const statusField = fields.find(field => field.name === 'Status');
