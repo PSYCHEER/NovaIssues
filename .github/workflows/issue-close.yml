@@ -8,15 +8,27 @@ on:
 jobs:
   close_issue:
     runs-on: ubuntu-latest
-    if: |
-      contains(github.event.label.name, 'invalid') ||
-      contains(github.event.label.name, 'duplicate') ||
-      contains(github.event.label.name, 'not planned')
     steps:
       - name: Close issue
+        if: |
+            contains(github.event.label.name, 'invalid') ||
+            contains(github.event.label.name, 'duplicate')
         uses: peter-evans/close-issue@v3
         with:
             issue-number: ${{ github.event.issue.number }}
             comment: Auto-closed
-            labels: invalid, duplicate, not planned
+            labels: |
+                invalid
+                duplicate
+                not planned
+            token: ${{ secrets.TOKEN }}
+      - name: Not Planned
+        if: contains(github.event.label.name, 'not planned')
+        uses: peter-evans/close-issue@v3
+        with:
+            issue-number: ${{ github.event.issue.number }}
+            comment: Auto-closed
+            labels: |
+                not_planned
+            close-reason: not_planned
             token: ${{ secrets.TOKEN }}
