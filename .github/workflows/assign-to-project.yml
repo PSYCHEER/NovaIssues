@@ -19,7 +19,7 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const labels = issue.labels.map(label => label.name);
-            const projectId = '4'; // Replace with your project ID
+            const projectId = 'YOUR_PROJECT_ID'; // Replace with your project ID
             const columnMapping = {
               'bug': 'Issue',
               'addon': 'Suggestions',
@@ -33,20 +33,50 @@ jobs:
               return;
             }
 
+            const { data: projects } = await github.projects.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+
+            const project = projects.find(proj => proj.id === parseInt(projectId));
+
+            if (!project) {
+              console.log('Project not found.');
+              return;
+            }
+
+            const { data: columns } = await github.projects.listColumns({
+              project_id: project.id
+            });
+
+            const column = columns.find(col => col.name === 'No status');
+
+            if (!column) {
+              console.log('No status column not found.');
+              return;
+            }
+
             const { data: projectCards } = await github.projects.listCards({
-              column_id: projectId,
+              column_id: column.id,
               archived_state: 'not_archived'
             });
 
             const card = projectCards.find(card => card.content_url === issue.url);
 
-            if (card && card.column_id === 'No status') {
+            if (card) {
+              const targetColumn = columns.find(col => col.name === status);
+
+              if (!targetColumn) {
+                console.log(`Target column ${status} not found.`);
+                return;
+              }
+
               await github.projects.moveCard({
                 card_id: card.id,
                 position: 'top',
-                column_id: status
+                column_id: targetColumn.id
               });
               console.log(`Moved issue #${issue.number} to ${status} column.`);
             } else {
-              console.log(`Issue #${issue.number} is already in a different column or not found.`);
+              console.log(`Issue #${issue.number} is not in the 'No status' column.`);
             }
