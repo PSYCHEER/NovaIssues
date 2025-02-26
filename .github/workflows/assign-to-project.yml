@@ -66,4 +66,4 @@ jobs:
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/projects/columns/cards/$CARD_ID \
-            -d "{\"note\": \"Status: Open\"}" # Replace with actual status field update
+            -d "{\"note\": \"Status: Suggestions\"}" # Replace with actual status field update
