@@ -38,10 +38,9 @@ jobs:
         echo "Has Addon: ${{ steps.check_labels.outputs.hasAddon }}"
         echo "Has Enhancement: ${{ steps.check_labels.outputs.hasEnhancement }}"
 
-    - name: Assign to project
-      if: steps.check_labels.outputs.hasAddon == 'true' || steps.check_labels.outputs.hasEnhancement == 'true'
+    - name: Create script to assign issue to project
       run: |
-        node -e "
+        echo "
         const fetch = require('node-fetch');
 
         async function assignIssueToProject() {
@@ -98,7 +97,11 @@ jobs:
           console.error(`Error assigning issue to project: ${error.message}`);
           throw error;
         });
-        "
+        " > assign-issue-to-project.js
+
+    - name: Assign to project
+      if: steps.check_labels.outputs.hasAddon == 'true' || steps.check_labels.outputs.hasEnhancement == 'true'
+      run: node assign-issue-to-project.js
       env:
         GH_PAT: ${{ secrets.GH_PAT }}
         ISSUE_ID: ${{ github.event.issue.id }}
