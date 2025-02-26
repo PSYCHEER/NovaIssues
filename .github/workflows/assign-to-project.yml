@@ -1,4 +1,4 @@
-name: Reassign Issue Based on Label
+name: Assign Issue to Project Status
 
 on:
   issues:
@@ -6,45 +6,50 @@ on:
   issue_comment:
     types: [created, edited]
 
-
 jobs:
-  list-issues:
+  assign-status:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Check out the repository
         uses: actions/checkout@v2
 
-      - name: List issues assigned to the project
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        run: |
-          echo '{
-            "query": "query { 
-              node(id: \\"PVT_kwHOAo7FNc4AzGK0\\") { 
-                ... on ProjectV2 { 
-                  items(first: 100) { 
-                    nodes { 
-                      content { 
-                        ... on Issue { 
-                          title 
-                          number 
-                          assignees(first: 10) { 
-                            nodes { 
-                              login 
-                            } 
-                          } 
-                        } 
-                      } 
-                    } 
-                  } 
-                } 
-              } 
-            }"
-          }' > query.json
+      - name: Assign issue to project status
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const projectId = 'PVT_kwHOAo7FNc4AzGK0';
+            const issueNumber = context.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
 
-          response=$(curl -s -X POST -H "Authorization: bearer $GITHUB_TOKEN" \
-               -H "Content-Type: application/json" \
-               -d @query.json \
-               https://api.github.com/graphql)
+            const labels = context.payload.issue.labels.map(label => label.name);
+            let status = '';
 
-          echo "$response" | jq '.data.node.items.nodes[].content | {title, number, assignees: .assignees.nodes[].login}'
+            if (labels.includes('bug')) {
+              status = 'To Do';
+            } else if (labels.includes('enhancement')) {
+              status = 'In Progress';
+            } else if (labels.includes('question')) {
+              status = 'Done';
+            }
+
+            if (status) {
+              const project = await github.projects.getProject({
+                project_id: projectId
+              });
+
+              const columns = await github.projects.listColumns({
+                project_id: projectId
+              });
+
+              const column = columns.data.find(col => col.name === status);
+
+              if (column) {
+                await github.projects.createCard({
+                  column_id: column.id,
+                  content_id: context.payload.issue.id,
+                  content_type: 'Issue'
+                });
+              }
+            }
