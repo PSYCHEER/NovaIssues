@@ -11,15 +11,19 @@ jobs:
     steps:
       - name: Close issue
         if: |
-            contains(github.event.label.name, 'invalid') ||
+            contains(github.event.label.name, 'invalid')
+        uses: peter-evans/close-issue@v3
+        with:
+            issue-number: ${{ github.event.issue.number }}
+            comment: Auto-closed
+            token: ${{ secrets.TOKEN }}
+      - name: Close duplicate
+        if: |
             contains(github.event.label.name, 'duplicate')
         uses: peter-evans/close-issue@v3
         with:
             issue-number: ${{ github.event.issue.number }}
             comment: Auto-closed
-            labels: |
-                invalid
-                duplicate
             token: ${{ secrets.TOKEN }}
       - name: Not Planned
         if: contains(github.event.label.name, 'not_planned')
@@ -27,7 +31,5 @@ jobs:
         with:
             issue-number: ${{ github.event.issue.number }}
             comment: Auto-closed
-            labels: |
-                not_planned
             close-reason: not_planned
             token: ${{ secrets.TOKEN }}

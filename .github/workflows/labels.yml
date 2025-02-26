@@ -18,15 +18,15 @@ jobs:
           labels=$(jq -r '.issue.labels[].name' $GITHUB_EVENT_PATH)
           echo "labels=$labels" >> $GITHUB_ENV
           if echo "$labels" | grep -q "addon"; then
-            echo "::set-output name=label::addon"
+            echo "label=addon" >> $GITHUB_OUTPUT
           elif echo "$labels" | grep -q "bug"; then
-            echo "::set-output name=label::bug"
+            echo "label=bug" >> $GITHUB_OUTPUT
           elif echo "$labels" | grep -q "enhancement"; then
-            echo "::set-output name=label::enhancement"
+            echo "label=enhancement" >> $GITHUB_OUTPUT
           elif echo "$labels" | grep -q "candidate"; then
-            echo "::set-output name=label::candidate"
+            echo "label=candidate" >> $GITHUB_OUTPUT
           elif echo "$labels" | grep -q "documentation"; then
-            echo "::set-output name=label::documentation"
+            echo "label=documentation" >> $GITHUB_OUTPUT
           else
             echo "Label is neither 'addon', 'enhancement' nor 'bug'. Exiting."
             exit 0
