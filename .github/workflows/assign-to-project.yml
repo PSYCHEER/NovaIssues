@@ -16,7 +16,7 @@ jobs:
       - name: Assign issue to project board
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.TOKEN }}
           script: |
             const issue = context.payload.issue;
             const labels = issue.labels.map(label => label.name);
