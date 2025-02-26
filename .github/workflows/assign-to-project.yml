@@ -26,4 +26,4 @@ jobs:
         env:
           TOKEN: ${{ secrets.TOKEN }}
           PROJECT_ID: PVT_kwHOAo7FNc4AzGK0
-        run: node .github/scripts/assign-status.js
+        run: node assign-status.js
