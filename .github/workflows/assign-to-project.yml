@@ -1,122 +1,107 @@
-name: Assign Issues to Project Board
+name: Reassign Issue Based on Label
 
 on:
   issues:
-    types: [opened, labeled, unlabeled, edited]
-  issue_comment:
-    types: [created, edited]
+    types: [labeled]
 
 jobs:
-  assign-to-project:
+  reassign_issue:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repository
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Assign issue to project board
-        uses: actions/github-script@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          github-token: ${{ secrets.TOKEN }}
-          script: |
-            const issue = context.payload.issue;
-            const labels = issue.labels.map(label => label.name);
-            const projectId = 'PVT_kwHOAo7FNc4AzGK0'; // Replace with your project global ID
-            const columnMapping = {
-              'bug': 'Issue',
-              'addon': 'Suggestions',
-              'enhancement': 'Suggestions'
-            };
+          node-version: '14'
 
-            const status = labels.map(label => columnMapping[label]).find(status => status);
+      - name: Install dependencies
+        run: npm install @octokit/graphql
 
-            if (!status) {
-              console.log('No matching label found for the issue.');
-              return;
-            }
+      - name: Reassign issue based on label
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+        run: |
+          const { graphql } = require("@octokit/graphql");
+          const { Octokit } = require("@octokit/rest");
+          const octokit = new Octokit({ auth: process.env.TOKEN });
+          const graphqlWithAuth = graphql.defaults({
+            headers: {
+              authorization: `token ${process.env.TOKEN}`,
+            },
+          });
 
-            let items;
-            try {
-              const response = await github.graphql(`
-                query($projectId: ID!) {
-                  node(id: $projectId) {
-                    ... on ProjectV2 {
-                      items(first: 100) {
-                        nodes {
-                          id
-                          content {
-                            ... on Issue {
-                              id
-                              number
-                              url
-                            }
-                          }
-                          fieldValues(first: 20) {
-                            nodes {
-                              ... on ProjectV2ItemFieldSingleSelectValue {
-                                field {
-                                  ... on ProjectV2SingleSelectField {
-                                    name
-                                  }
-                                }
-                                name
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              `, {
-                projectId: projectId
-              });
-              items = response.node.items.nodes;
-              console.log('Items:', items);
-            } catch (error) {
-              console.log('Error fetching items:', error);
-              return;
-            }
+          const label = process.env.GITHUB_EVENT_LABEL_NAME;
+          const issueNumber = process.env.GITHUB_EVENT_ISSUE_NUMBER;
+          const owner = process.env.GITHUB_REPOSITORY_OWNER;
+          const repo = process.env.GITHUB_REPOSITORY;
 
-            items.forEach(item => {
-              console.log(`Item URL: ${item.content.url}`);
-            });
+          let assignee;
+          let projectStatus;
 
-            const item = items.find(item => item.content.url === issue.url);
+          switch (label) {
+            case 'bug':
+              assignee = 'bug-fixer';
+              projectStatus = 'In Progress';
+              break;
+            case 'feature':
+              assignee = 'feature-dev';
+              projectStatus = 'To Do';
+              break;
+            default:
+              assignee = 'default-assignee';
+              projectStatus = 'Backlog';
+          }
 
-            if (!item) {
-              console.log(`Issue not found in the project. Issue URL: ${issue.url}`);
-              return;
-            }
+          // Reassign the issue
+          await octokit.issues.update({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            assignees: [assignee]
+          });
 
-            const statusField = item.fieldValues.nodes.find(fieldValue => fieldValue.field.name === 'Status');
-
-            if (!statusField) {
-              console.log('Status field not found in the issue.');
-              return;
-            }
-
-            try {
-              await github.graphql(`
-                mutation($itemId: ID!, $fieldId: ID!, $value: String!) {
-                  updateProjectV2ItemFieldValue(input: {
-                    projectId: "${projectId}",
-                    itemId: $itemId,
-                    fieldId: $fieldId,
-                    value: {
-                      singleSelectOptionId: $value
-                    }
-                  }) {
-                    projectV2Item {
+          // Get the project item ID for the issue
+          const projectId = 'PVT_kwHOAo7FNc4AzGK0';
+          const { repository } = await graphqlWithAuth(`
+            query($owner: String!, $repo: String!, $issueNumber: Int!) {
+              repository(owner: $owner, name: $repo) {
+                issue(number: $issueNumber) {
+                  id
+                  projectItems(first: 1) {
+                    nodes {
                       id
                     }
                   }
                 }
-              `, {
-                itemId: item.id,
-                fieldId: statusField.field.id,
-                value: status
-              });
-              console.log(`Moved issue #${issue.number} to ${status} column.`);
-            } catch (error) {
-              console.log('Error updating item field value:', error);
+              }
             }
+          `, {
+            owner,
+            repo,
+            issueNumber: parseInt(issueNumber, 10)
+          });
+
+          const itemId = repository.issue.projectItems.nodes[0].id;
+
+          // Update the project status field
+          await graphqlWithAuth(`
+            mutation($projectId: ID!, $itemId: ID!, $status: String!) {
+              updateProjectV2ItemFieldValue(input: {
+                projectId: $projectId,
+                itemId: $itemId,
+                fieldValue: {
+                  singleSelectOptionId: $status
+                }
+              }) {
+                projectV2Item {
+                  id
+                }
+              }
+            }
+          `, {
+            projectId,
+            itemId,
+            status: projectStatus
+          });
